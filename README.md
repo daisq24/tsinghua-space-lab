@@ -1,6 +1,6 @@
 # 清华大学学生未来空间协会 · SPACE LAB
 
-社团官网，使用 React + Vite 构建，面向 GitHub Pages 自动部署。
+社团官网，使用 React + Vite 构建，通过 GitHub Pages 自动部署。
 
 ## 本地预览
 
@@ -16,14 +16,18 @@ npm run build
 npm run preview
 ```
 
-## 最常修改的内容
+## 内容结构
 
-社团介绍、三个研究方向、四篇文章与项目图集都集中在 [`src/content.js`](src/content.js)。只需修改对应文字或链接，不需要改动页面组件。
+网站采用「研究组 → 专栏标签 → 专栏内容」结构。三个研究组、17 个主题专栏、每日行业讯息和刊行思考都集中在 [`src/content.js`](src/content.js)。
 
-- 修改页面结构：`src/App.jsx`
-- 修改视觉样式：`src/styles.css`
-- 替换项目图片：将 WebP 图片放入 `public/images/`，再更新 `src/content.js` 中的文件名
-- 修改仓库名后：同步更新 `vite.config.js` 的 `base`、`index.html` 的图标路径，以及本文件中的链接
+- `dailyDigest`：每日行业讯息的收录日期与说明
+- `embodiedNews`：具身智能与机器人行业消息，同步显示在「具身感知」和「空间机器人」专栏
+- `spatialSocietyArticles`：明日世界组「空间社会」专栏的四篇刊行思考
+- `groups`：研究组介绍、专栏名称、研究方向与对应内容
+- `public/images/`：全站视觉素材；月面园林图片只作视觉使用，不是独立项目
+- `public/fonts/`：网站自托管字体
+
+修改页面结构使用 `src/App.jsx`，修改视觉样式使用 `src/styles.css`。若修改仓库名，需要同步更新 `vite.config.js` 的 `base`、HTML 与 CSS 中的资源路径。
 
 ## 共同编辑
 
@@ -34,14 +38,9 @@ npm run preview
 
 详细步骤见 [CONTRIBUTING.md](CONTRIBUTING.md)。
 
-## 发布到 GitHub Pages
+## 公开地址
 
-首次推送后，在仓库 **Settings → Pages → Build and deployment** 中将 **Source** 设为 **GitHub Actions**。之后每次合并到 `main` 都会自动部署。
+- 仓库：https://github.com/daisq24/tsinghua-space-lab
+- 官网：https://daisq24.github.io/tsinghua-space-lab/
 
-仓库地址：https://github.com/daisq24/tsinghua-space-lab
-
-启用 Pages 后的访问地址：https://daisq24.github.io/tsinghua-space-lab/
-
-## 文章与图片
-
-四篇文章链接至已发布的 SFES LAB 原文。月面园林项目图片由社团提供并随仓库发布。
+四篇刊行思考链接至已发布的 SFES LAB 原文。视觉图片与字体由社团提供并随仓库发布。

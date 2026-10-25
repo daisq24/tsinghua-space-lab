@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react'
-import { articles, gallery, groups, site } from './content.js'
+import { useState } from 'react'
+import { dailyDigest, groups, site } from './content.js'
 
 const asset = (name) => `${import.meta.env.BASE_URL}images/${name}`
 
@@ -21,29 +21,61 @@ function OrbitMark() {
   )
 }
 
+function NewsList({ items }) {
+  return (
+    <div className="news-list">
+      {items.map((item) => (
+        <article className="news-card" key={item.id}>
+          <div className="news-meta"><span>{item.type}</span><time>{dailyDigest.date}</time></div>
+          <h4>{item.title}</h4>
+          <p>{item.summary}</p>
+          {item.details?.length > 0 && (
+            <ul>{item.details.map((detail) => <li key={detail}>{detail}</li>)}</ul>
+          )}
+          {item.links?.length > 0 && (
+            <div className="news-links">
+              {item.links.map((link) => <a href={link.url} target="_blank" rel="noreferrer" key={link.url}>{link.label} <Arrow diagonal /></a>)}
+            </div>
+          )}
+        </article>
+      ))}
+    </div>
+  )
+}
+
+function ArticleList({ items }) {
+  return (
+    <div className="article-list">
+      {items.map((article) => (
+        <a className="article-card" href={article.url} target="_blank" rel="noreferrer" key={article.id}>
+          <span className="article-number">{article.id}</span>
+          <div className="article-body">
+            <div className="article-meta"><span>{article.type}</span><span>{article.year}</span></div>
+            <h4>{article.title}</h4>
+            <p className="article-english">{article.english}</p>
+            <p className="article-summary">{article.summary}</p>
+          </div>
+          <span className="article-arrow"><Arrow diagonal /></span>
+        </a>
+      ))}
+    </div>
+  )
+}
+
 function App() {
   const [activeGroup, setActiveGroup] = useState(0)
+  const [selectedColumns, setSelectedColumns] = useState(() => Object.fromEntries(groups.map((group, index) => [index, group.defaultColumn])))
   const [menuOpen, setMenuOpen] = useState(false)
-  const [selectedImage, setSelectedImage] = useState(null)
   const group = groups[activeGroup]
-
-  useEffect(() => {
-    const onKey = (event) => {
-      if (event.key === 'Escape') {
-        setSelectedImage(null)
-        setMenuOpen(false)
-      }
-    }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [])
-
-  useEffect(() => {
-    document.body.style.overflow = selectedImage ? 'hidden' : ''
-    return () => { document.body.style.overflow = '' }
-  }, [selectedImage])
+  const activeColumnTitle = selectedColumns[activeGroup]
+  const activeColumn = group.columns.find((column) => column.title === activeColumnTitle) || group.columns[0]
 
   const closeMenu = () => setMenuOpen(false)
+  const openColumn = (groupIndex, columnTitle) => {
+    setActiveGroup(groupIndex)
+    setSelectedColumns((current) => ({ ...current, [groupIndex]: columnTitle }))
+    closeMenu()
+  }
 
   return (
     <>
@@ -59,8 +91,8 @@ function App() {
         <nav className={menuOpen ? 'nav open' : 'nav'} aria-label="主导航">
           <a href="#about" onClick={closeMenu}>关于我们</a>
           <a href="#groups" onClick={closeMenu}>研究方向</a>
-          <a href="#journal" onClick={closeMenu}>空间志</a>
-          <a href="#projects" onClick={closeMenu}>项目</a>
+          <a href="#groups" onClick={() => openColumn(0, '空间机器人')}>每日讯息</a>
+          <a href="#groups" onClick={() => openColumn(1, '空间社会')}>刊行思考</a>
           <a className="nav-join" href="#join" onClick={closeMenu}>加入我们 <Arrow diagonal /></a>
         </nav>
       </header>
@@ -71,24 +103,25 @@ function App() {
           <div className="hero-image-wrap">
             <img src={asset('hero-lunar-pavilion.webp')} alt="月光下的地外园林与穹顶建筑" className="hero-image" />
             <div className="hero-image-shade" />
-            <span className="image-index">LUNAR GARDEN / 001</span>
+            <span className="image-index">SPACE / UNLIMITED</span>
           </div>
+          <span className="space-calligraphy" aria-hidden="true">空间无界</span>
           <div className="hero-content page-shell">
-            <p className="eyebrow reveal"><span /> EXPLORE · CREATE · CONNECT</p>
+            <p className="eyebrow"><span /> EXPLORE · CREATE · CONNECT</p>
             <h1><span>清华大学学生</span>未来空间协会</h1>
             <p className="hero-english">{site.englishName}</p>
             <p className="hero-statement">玩转关于空间的一切<span>一个跨学科的专业组织</span></p>
             <div className="hero-actions">
               <a className="button button-primary" href="#groups">探索三个方向 <Arrow /></a>
-              <a className="text-link" href="#journal">阅读空间志 <Arrow diagonal /></a>
+              <a className="text-link" href="#groups" onClick={() => openColumn(0, '空间机器人')}>今日行业讯息 <Arrow diagonal /></a>
             </div>
           </div>
           <div className="hero-footer page-shell">
             <span>从身体感知到城市社会，再到宏观宇宙</span>
             <div className="hero-stats">
               <span><b>03</b> 研究方向</span>
+              <span><b>17</b> 主题专栏</span>
               <span><b>∞</b> 空间尺度</span>
-              <span><b>01</b> 共同社区</span>
             </div>
           </div>
         </section>
@@ -107,10 +140,6 @@ function App() {
 
         <section className="groups-section section" id="groups">
           <div className="page-shell">
-            <div className="section-heading">
-              <div><div className="section-label"><span>01—03</span> RESEARCH / 研究方向</div><h2>三个入口，同一个宇宙</h2></div>
-              <p>选择你好奇的尺度，从这里开始。</p>
-            </div>
             <div className="group-tabs" role="tablist" aria-label="研究方向">
               {groups.map((item, index) => (
                 <button key={item.id} role="tab" aria-selected={activeGroup === index} aria-controls="group-panel" className={activeGroup === index ? 'group-tab active' : 'group-tab'} onClick={() => setActiveGroup(index)}>
@@ -118,7 +147,7 @@ function App() {
                 </button>
               ))}
             </div>
-            <div className="group-panel" id="group-panel" role="tabpanel" key={group.id} style={{ '--group-color': group.color }}>
+            <div className="group-panel" id="group-panel" role="tabpanel" style={{ '--group-color': group.color }}>
               <div className="group-visual">
                 <img src={asset(group.image)} alt={`${group.short}主题视觉`} />
                 <span>{group.english}</span>
@@ -128,47 +157,39 @@ function App() {
                 <h3>{group.title}</h3>
                 <p className="group-question">{group.question}</p>
                 <p className="group-description">{group.description}</p>
-                <div className="tag-list">{group.tags.map((tag) => <span key={tag}>{tag}</span>)}</div>
-                {activeGroup === 1 && <a className="text-link" href="#journal">阅读本组已发布的四篇文章 <Arrow /></a>}
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section className="journal section page-shell" id="journal">
-          <div className="section-heading journal-heading">
-            <div><div className="section-label"><span>04</span> JOURNAL / 空间志</div><h2>已刊行的思考</h2></div>
-            <div className="journal-source"><span>明日世界组 · 智慧城市与空间社会</span><a href={site.lab} target="_blank" rel="noreferrer">来自 SFES LAB <Arrow diagonal /></a></div>
-          </div>
-          <div className="article-list">
-            {articles.map((article) => (
-              <a className="article-card" href={article.url} target="_blank" rel="noreferrer" key={article.id}>
-                <span className="article-number">{article.id}</span>
-                <div className="article-body">
-                  <div className="article-meta"><span>{article.type}</span><span>{article.year}</span></div>
-                  <h3>{article.title}</h3>
-                  <p className="article-english">{article.english}</p>
-                  <p className="article-summary">{article.summary}</p>
+                <div className="column-tabs" role="tablist" aria-label={`${group.short}专栏`}>
+                  {group.columns.map((column, index) => (
+                    <button key={column.title} role="tab" aria-selected={activeColumn.title === column.title} aria-controls="column-panel" className={activeColumn.title === column.title ? 'column-tab active' : 'column-tab'} onClick={() => setSelectedColumns((current) => ({ ...current, [activeGroup]: column.title }))}>
+                      <span>{String(index + 1).padStart(2, '0')}</span>{column.title}
+                    </button>
+                  ))}
                 </div>
-                <span className="article-arrow"><Arrow diagonal /></span>
-              </a>
-            ))}
-          </div>
-        </section>
-
-        <section className="projects section" id="projects">
-          <div className="page-shell">
-            <div className="section-heading">
-              <div><div className="section-label"><span>05</span> PROJECT / 跨组项目</div><h2>月面园林</h2></div>
-              <p>当地外建造遇见东方园林，<br />空间成为连接技术、身体与记忆的媒介。</p>
-            </div>
-            <div className="gallery-grid">
-              {gallery.map((item, index) => (
-                <button className={`gallery-item gallery-item-${index + 1}`} key={item.image} onClick={() => setSelectedImage(item)} aria-label={`放大查看${item.title}`}>
-                  <img src={asset(item.image)} alt={item.title} loading="lazy" />
-                  <span className="gallery-caption"><span><b>{item.title}</b><small>{item.note}</small></span><Arrow diagonal /></span>
-                </button>
-              ))}
+              </div>
+              <div className="column-panel" id="column-panel" role="tabpanel" key={`${group.id}-${activeColumn.title}`}>
+                <div className="column-header">
+                  <div>
+                    <p>{group.short} / {activeColumn.english}</p>
+                    <h3>{activeColumn.title}{!activeColumn.title.endsWith('专栏') && <span>专栏</span>}</h3>
+                  </div>
+                  <span className="column-topics">{activeColumn.topics}</span>
+                </div>
+                {activeColumn.kind === 'news' && (
+                  <div className="digest-heading"><span>{dailyDigest.title} · {dailyDigest.date}</span><small>{dailyDigest.note}</small></div>
+                )}
+                {activeColumn.kind === 'articles' && (
+                  <div className="digest-heading"><span>刊行思考 · ESSAYS & FIELD NOTES</span><a href={site.lab} target="_blank" rel="noreferrer">原文来自 SFES LAB <Arrow diagonal /></a></div>
+                )}
+                {activeColumn.kind === 'news' && <NewsList items={activeColumn.items} />}
+                {activeColumn.kind === 'articles' && <ArticleList items={activeColumn.items} />}
+                {!activeColumn.kind && (
+                  <div className="empty-column">
+                    <span className="empty-orbit"><OrbitMark /></span>
+                    <h4>这个专栏，正在等待第一条讯号。</h4>
+                    <p>内容持续筹备与更新。也欢迎你带来一篇文章、一个项目，或一条值得分享的行业消息。</p>
+                    <a className="text-link" href={site.github} target="_blank" rel="noreferrer">通过 GitHub 提交内容 <Arrow diagonal /></a>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </section>
@@ -176,7 +197,7 @@ function App() {
         <section className="join section" id="join">
           <div className="join-orbit" />
           <div className="page-shell join-content">
-            <div className="section-label"><span>06</span> JOIN US / 加入我们</div>
+            <div className="section-label"><span>04</span> JOIN US / 加入我们</div>
             <h2>带来一个问题，<br />一起打开新的空间。</h2>
             <p>无论你来自技术、设计、工程还是人文社科，<br />只要你对空间怀有好奇，这里就有你的坐标。</p>
             <div className="join-actions">
@@ -192,16 +213,6 @@ function App() {
         <p>从城市，到虚拟世界，再到宇宙。</p>
         <span>© {new Date().getFullYear()} TSINGHUA STUDENT SPACE LAB</span>
       </footer>
-
-      {selectedImage && (
-        <div className="lightbox" role="dialog" aria-modal="true" aria-label={selectedImage.title} onClick={() => setSelectedImage(null)}>
-          <button className="lightbox-close" onClick={() => setSelectedImage(null)} aria-label="关闭图片">×</button>
-          <figure onClick={(event) => event.stopPropagation()}>
-            <img src={asset(selectedImage.image)} alt={selectedImage.title} />
-            <figcaption><b>{selectedImage.title}</b><span>{selectedImage.note}</span></figcaption>
-          </figure>
-        </div>
-      )}
     </>
   )
 }
